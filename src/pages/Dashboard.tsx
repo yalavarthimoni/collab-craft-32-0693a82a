@@ -7,6 +7,8 @@ import ProjectOwnerDashboard from "@/components/dashboard/ProjectOwnerDashboard"
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Notifications from "@/components/Notifications";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -83,10 +85,14 @@ const Dashboard = () => {
               {userRole === "freelancer" ? "Freelancer Dashboard" : "Project Owner Dashboard"}
             </p>
           </div>
-          <Button onClick={handleLogout} variant="ghost" size="sm">
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Notifications />
+            <ThemeToggle />
+            <Button onClick={handleLogout} variant="ghost" size="sm">
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 

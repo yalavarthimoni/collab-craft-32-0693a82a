@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Calendar, CheckCircle2 } from "lucide-react";
+import { Briefcase, Calendar, CheckCircle2, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Project {
@@ -123,6 +123,14 @@ const FreelancerDashboard = ({ userId }: FreelancerDashboardProps) => {
                         Due: {new Date(project.deadline).toLocaleDateString()}
                       </p>
                     )}
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      size="sm"
+                      onClick={() => window.location.href = `/project/${project.id}`}
+                    >
+                      View Workspace
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

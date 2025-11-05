@@ -193,7 +193,12 @@ const ProjectOwnerDashboard = ({ userId }: ProjectOwnerDashboardProps) => {
                       Due: {new Date(project.deadline).toLocaleDateString()}
                     </p>
                   )}
-                  <Button variant="outline" className="w-full" size="sm">
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    size="sm"
+                    onClick={() => window.location.href = `/project/${project.id}`}
+                  >
                     <Users className="h-4 w-4 mr-2" />
                     View Team
                   </Button>
