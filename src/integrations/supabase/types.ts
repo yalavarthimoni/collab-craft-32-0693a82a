@@ -53,6 +53,72 @@ export type Database = {
           },
         ]
       }
+      email_preferences: {
+        Row: {
+          application_updates: boolean | null
+          created_at: string | null
+          deadline_reminders: boolean | null
+          id: string
+          new_projects: boolean | null
+          project_updates: boolean | null
+          user_id: string
+        }
+        Insert: {
+          application_updates?: boolean | null
+          created_at?: string | null
+          deadline_reminders?: boolean | null
+          id?: string
+          new_projects?: boolean | null
+          project_updates?: boolean | null
+          user_id: string
+        }
+        Update: {
+          application_updates?: boolean | null
+          created_at?: string | null
+          deadline_reminders?: boolean | null
+          id?: string
+          new_projects?: boolean | null
+          project_updates?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_queue: {
+        Row: {
+          body: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          sent_at: string | null
+          status: string | null
+          subject: string
+          template_type: string
+          to_email: string
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          sent_at?: string | null
+          status?: string | null
+          subject: string
+          template_type: string
+          to_email: string
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string
+          template_type?: string
+          to_email?: string
+        }
+        Relationships: []
+      }
       file_attachments: {
         Row: {
           created_at: string | null
@@ -315,21 +381,36 @@ export type Database = {
       }
       project_members: {
         Row: {
+          applied_at: string | null
+          cover_letter: string | null
           id: string
+          interview_notes: string | null
           joined_at: string
           project_id: string
+          resume_url: string | null
+          status: string | null
           user_id: string
         }
         Insert: {
+          applied_at?: string | null
+          cover_letter?: string | null
           id?: string
+          interview_notes?: string | null
           joined_at?: string
           project_id: string
+          resume_url?: string | null
+          status?: string | null
           user_id: string
         }
         Update: {
+          applied_at?: string | null
+          cover_letter?: string | null
           id?: string
+          interview_notes?: string | null
           joined_at?: string
           project_id?: string
+          resume_url?: string | null
+          status?: string | null
           user_id?: string
         }
         Relationships: [
@@ -349,12 +430,48 @@ export type Database = {
           },
         ]
       }
+      project_progress: {
+        Row: {
+          id: string
+          notes: string | null
+          progress_percentage: number | null
+          project_id: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          notes?: string | null
+          progress_percentage?: number | null
+          project_id: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          notes?: string | null
+          progress_percentage?: number | null
+          project_id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_progress_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string
           deadline: string | null
           description: string
           id: string
+          last_reminder_sent: string | null
           owner_id: string
           required_skills: string[] | null
           status: string | null
@@ -366,6 +483,7 @@ export type Database = {
           deadline?: string | null
           description: string
           id?: string
+          last_reminder_sent?: string | null
           owner_id: string
           required_skills?: string[] | null
           status?: string | null
@@ -377,6 +495,7 @@ export type Database = {
           deadline?: string | null
           description?: string
           id?: string
+          last_reminder_sent?: string | null
           owner_id?: string
           required_skills?: string[] | null
           status?: string | null
