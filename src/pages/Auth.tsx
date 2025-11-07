@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { Briefcase, Users } from "lucide-react";
-import { getCurrentUser, setCurrentUser, createProfile, getProfiles } from "@/lib/localStorage";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -20,10 +20,12 @@ const Auth = () => {
   const [role, setRole] = useState<"freelancer" | "project_owner">("freelancer");
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      navigate("/dashboard");
-    }
+    // Check if user is already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate("/dashboard");
+      }
+    });
   }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -39,42 +41,34 @@ const Auth = () => {
     }
 
     setLoading(true);
-    try {
-      const profiles = getProfiles();
-      const existingUser = profiles.find(p => p.email === email);
-      
-      if (existingUser) {
-        toast({
-          title: "User already exists",
-          description: "Please sign in instead",
-          variant: "destructive",
-        });
-        return;
-      }
+    const redirectUrl = `${window.location.origin}/dashboard`;
 
-      const newProfile = createProfile({
-        full_name: fullName,
-        email,
-        role,
-        skills: [],
-      });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: fullName,
+          role: role,
+        },
+      },
+    });
 
-      setCurrentUser(newProfile);
+    setLoading(false);
 
-      toast({
-        title: "Account created!",
-        description: "Welcome to FPCP. Redirecting to dashboard...",
-      });
-
-      navigate("/dashboard");
-    } catch (error: any) {
+    if (error) {
       toast({
         title: "Sign up failed",
         description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
+    } else {
+      toast({
+        title: "Account created!",
+        description: "Welcome to FPCP. Redirecting to dashboard...",
+      });
+      navigate("/dashboard");
     }
   };
 
@@ -91,35 +85,25 @@ const Auth = () => {
     }
 
     setLoading(true);
-    try {
-      const profiles = getProfiles();
-      const user = profiles.find(p => p.email === email);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (!user) {
-        toast({
-          title: "User not found",
-          description: "Please sign up first",
-          variant: "destructive",
-        });
-        return;
-      }
+    setLoading(false);
 
-      setCurrentUser(user);
-
-      toast({
-        title: "Welcome back!",
-        description: "Redirecting to dashboard...",
-      });
-
-      navigate("/dashboard");
-    } catch (error: any) {
+    if (error) {
       toast({
         title: "Sign in failed",
         description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
+    } else {
+      toast({
+        title: "Welcome back!",
+        description: "Redirecting to dashboard...",
+      });
+      navigate("/dashboard");
     }
   };
 

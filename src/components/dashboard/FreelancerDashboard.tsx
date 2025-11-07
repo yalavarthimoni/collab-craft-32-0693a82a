@@ -1,18 +1,25 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Calendar, CheckCircle2 } from "lucide-react";
+import { Briefcase, Calendar, CheckCircle2, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getProjects, getProjectMembers, addProjectMember, Project } from "@/lib/localStorage";
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  required_skills: string[];
+  deadline: string | null;
+  status: string;
+}
 
 interface FreelancerDashboardProps {
   userId: string;
 }
 
 const FreelancerDashboard = ({ userId }: FreelancerDashboardProps) => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
   const [myProjects, setMyProjects] = useState<Project[]>([]);
@@ -22,34 +29,54 @@ const FreelancerDashboard = ({ userId }: FreelancerDashboardProps) => {
     fetchProjects();
   }, [userId]);
 
-  const fetchProjects = () => {
-    const allProjects = getProjects();
-    const members = getProjectMembers();
-    
-    const myProjectIds = members
-      .filter(m => m.user_id === userId)
-      .map(m => m.project_id);
+  const fetchProjects = async () => {
+    // Fetch all available projects
+    const { data: allProjects } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("status", "open")
+      .order("created_at", { ascending: false });
 
-    const joined = allProjects.filter(p => myProjectIds.includes(p.id));
-    const available = allProjects.filter(
-      p => p.status === "open" && !myProjectIds.includes(p.id)
+    // Fetch projects the user is part of
+    const { data: memberProjects } = await supabase
+      .from("project_members")
+      .select("project_id")
+      .eq("user_id", userId);
+
+    const memberProjectIds = memberProjects?.map((p) => p.project_id) || [];
+
+    // Fetch full details of joined projects
+    const { data: joinedProjects } = await supabase
+      .from("projects")
+      .select("*")
+      .in("id", memberProjectIds);
+
+    setAvailableProjects(
+      allProjects?.filter((p) => !memberProjectIds.includes(p.id)) || []
     );
-
-    setMyProjects(joined);
-    setAvailableProjects(available);
+    setMyProjects(joinedProjects || []);
     setLoading(false);
   };
 
-  const handleJoinProject = (projectId: string) => {
-    addProjectMember({ project_id: projectId, user_id: userId });
+  const handleJoinProject = async (projectId: string) => {
+    const { error } = await supabase
+      .from("project_members")
+      .insert({ project_id: projectId, user_id: userId });
 
-    toast({
-      title: "Success!",
-      description: "You have joined the project",
-      variant: "default",
-    });
-
-    fetchProjects();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to join project",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success!",
+        description: "You have joined the project",
+        variant: "default",
+      });
+      fetchProjects();
+    }
   };
 
   if (loading) {
@@ -100,7 +127,7 @@ const FreelancerDashboard = ({ userId }: FreelancerDashboardProps) => {
                       variant="outline"
                       className="w-full"
                       size="sm"
-                      onClick={() => navigate(`/project/${project.id}`)}
+                      onClick={() => window.location.href = `/project/${project.id}`}
                     >
                       View Workspace
                     </Button>

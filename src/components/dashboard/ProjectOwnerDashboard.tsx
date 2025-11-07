@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,14 +9,21 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getProjects, createProject, Project } from "@/lib/localStorage";
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  required_skills: string[];
+  deadline: string | null;
+  status: string;
+}
 
 interface ProjectOwnerDashboardProps {
   userId: string;
 }
 
 const ProjectOwnerDashboard = ({ userId }: ProjectOwnerDashboardProps) => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,38 +39,49 @@ const ProjectOwnerDashboard = ({ userId }: ProjectOwnerDashboardProps) => {
     fetchProjects();
   }, [userId]);
 
-  const fetchProjects = () => {
-    const allProjects = getProjects();
-    const myProjects = allProjects.filter(p => p.owner_id === userId);
-    setProjects(myProjects);
+  const fetchProjects = async () => {
+    const { data } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("owner_id", userId)
+      .order("created_at", { ascending: false });
+
+    setProjects(data || []);
     setLoading(false);
   };
 
-  const handleCreateProject = (e: React.FormEvent) => {
+  const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const skillsArray = skills.split(",").map((s) => s.trim()).filter((s) => s);
 
-    createProject({
+    const { error } = await supabase.from("projects").insert({
       owner_id: userId,
       title,
       description,
       required_skills: skillsArray,
-      deadline: deadline || undefined,
+      deadline: deadline || null,
       status: "open",
     });
 
-    toast({
-      title: "Success!",
-      description: "Project created successfully",
-    });
-
-    setOpen(false);
-    setTitle("");
-    setDescription("");
-    setSkills("");
-    setDeadline("");
-    fetchProjects();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create project",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success!",
+        description: "Project created successfully",
+      });
+      setOpen(false);
+      setTitle("");
+      setDescription("");
+      setSkills("");
+      setDeadline("");
+      fetchProjects();
+    }
   };
 
   if (loading) {
@@ -179,7 +197,7 @@ const ProjectOwnerDashboard = ({ userId }: ProjectOwnerDashboardProps) => {
                     variant="outline" 
                     className="w-full" 
                     size="sm"
-                    onClick={() => navigate(`/project/${project.id}`)}
+                    onClick={() => window.location.href = `/project/${project.id}`}
                   >
                     <Users className="h-4 w-4 mr-2" />
                     View Team

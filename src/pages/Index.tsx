@@ -1,13 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Briefcase, Users, CheckCircle, ArrowRight } from "lucide-react";
 import heroBackground from "@/assets/hero-background.jpg";
-import { getCurrentUser } from "@/lib/localStorage";
 
 const Index = () => {
-  const navigate = useNavigate();
-  const currentUser = getCurrentUser();
-
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -30,25 +26,17 @@ const Index = () => {
               Connect freelancers with project owners for seamless collaboration
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                variant="gradient" 
-                className="text-lg px-8 group"
-                onClick={() => navigate(currentUser ? "/dashboard" : "/auth")}
-              >
-                {currentUser ? "Go to Dashboard" : "Get Started"}
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              {!currentUser && (
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="text-lg px-8 bg-white/10 hover:bg-white/20 text-white border-white/30"
-                  onClick={() => navigate("/auth")}
-                >
+              <Link to="/auth">
+                <Button size="lg" variant="gradient" className="text-lg px-8 group">
+                  Get Started
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button size="lg" variant="outline" className="text-lg px-8 bg-white/10 hover:bg-white/20 text-white border-white/30">
                   Sign In
                 </Button>
-              )}
+              </Link>
             </div>
           </div>
         </div>
@@ -87,7 +75,7 @@ const Index = () => {
               </div>
               <h3 className="text-xl font-semibold mb-3">Seamless Workflow</h3>
               <p className="text-muted-foreground">
-                Kanban boards, file sharing, and integrated communication keep your projects on track.
+                Kanban boards, real-time updates, file sharing, and integrated communication keep your projects on track.
               </p>
             </div>
           </div>
@@ -103,21 +91,18 @@ const Index = () => {
           <p className="text-xl mb-8 text-white/90 max-w-2xl mx-auto">
             Join thousands of freelancers and project owners working together to bring ideas to life.
           </p>
-          <Button 
-            size="lg" 
-            variant="gradient" 
-            className="bg-white text-primary hover:bg-white/90 text-lg px-8"
-            onClick={() => navigate(currentUser ? "/dashboard" : "/auth")}
-          >
-            {currentUser ? "Go to Dashboard" : "Create Your Account"}
-          </Button>
+          <Link to="/auth">
+            <Button size="lg" variant="gradient" className="bg-white text-primary hover:bg-white/90 text-lg px-8">
+              Create Your Account
+            </Button>
+          </Link>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="bg-card border-t py-8">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; 2024 FPCP. Built with localStorage.</p>
+          <p>&copy; 2024 FPCP. Built with Lovable Cloud.</p>
         </div>
       </footer>
     </div>

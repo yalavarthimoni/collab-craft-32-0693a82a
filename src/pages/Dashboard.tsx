@@ -1,31 +1,62 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
+import FreelancerDashboard from "@/components/dashboard/FreelancerDashboard";
+import ProjectOwnerDashboard from "@/components/dashboard/ProjectOwnerDashboard";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import FreelancerDashboard from "@/components/dashboard/FreelancerDashboard";
-import ProjectOwnerDashboard from "@/components/dashboard/ProjectOwnerDashboard";
+import Notifications from "@/components/Notifications";
 import ThemeToggle from "@/components/ThemeToggle";
-import { getCurrentUser, setCurrentUser, Profile } from "@/lib/localStorage";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<Profile | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      navigate("/auth");
-    } else {
-      setUser(currentUser);
-    }
-    setLoading(false);
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+
+      setUser(session.user);
+
+      // Get user profile to check role
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profile) {
+        setUserRole(profile.role);
+      }
+
+      setLoading(false);
+    };
+
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate("/auth");
+      } else {
+        setUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleLogout = () => {
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     toast({
       title: "Logged out",
       description: "You have been successfully logged out",
@@ -51,10 +82,11 @@ const Dashboard = () => {
           <div>
             <h1 className="text-2xl font-bold text-primary">FPCP</h1>
             <p className="text-sm text-muted-foreground">
-              {user?.role === "freelancer" ? "Freelancer Dashboard" : "Project Owner Dashboard"}
+              {userRole === "freelancer" ? "Freelancer Dashboard" : "Project Owner Dashboard"}
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Notifications />
             <ThemeToggle />
             <Button onClick={handleLogout} variant="ghost" size="sm">
               <LogOut className="h-4 w-4 mr-2" />
@@ -65,8 +97,8 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {user?.role === "freelancer" ? (
-          <FreelancerDashboard userId={user.id} />
+        {userRole === "freelancer" ? (
+          <FreelancerDashboard userId={user?.id || ""} />
         ) : (
           <ProjectOwnerDashboard userId={user?.id || ""} />
         )}
