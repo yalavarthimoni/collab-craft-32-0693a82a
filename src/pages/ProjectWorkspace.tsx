@@ -10,6 +10,8 @@ import ProjectChat from "@/components/workspace/ProjectChat";
 import FileManager from "@/components/workspace/FileManager";
 import MilestoneTracker from "@/components/workspace/MilestoneTracker";
 import PaymentManager from "@/components/workspace/PaymentManager";
+import ApplicationReview from "@/components/workspace/ApplicationReview";
+import ProjectProgress from "@/components/workspace/ProjectProgress";
 
 const ProjectWorkspace = () => {
   const { projectId } = useParams();
@@ -77,12 +79,13 @@ const ProjectWorkspace = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="tasks" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="team">Team</TabsTrigger>
             <TabsTrigger value="chat">Chat</TabsTrigger>
             <TabsTrigger value="files">Files</TabsTrigger>
             <TabsTrigger value="milestones">Milestones</TabsTrigger>
+            {isOwner && <TabsTrigger value="applications">Applications</TabsTrigger>}
             {isOwner && <TabsTrigger value="payments">Payments</TabsTrigger>}
           </TabsList>
 
@@ -103,13 +106,26 @@ const ProjectWorkspace = () => {
           </TabsContent>
 
           <TabsContent value="milestones" className="mt-6">
-            <MilestoneTracker projectId={projectId!} isOwner={isOwner} />
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <MilestoneTracker projectId={projectId!} isOwner={isOwner} />
+              </div>
+              <div>
+                <ProjectProgress projectId={projectId!} />
+              </div>
+            </div>
           </TabsContent>
 
           {isOwner && (
-            <TabsContent value="payments" className="mt-6">
-              <PaymentManager projectId={projectId!} />
-            </TabsContent>
+            <>
+              <TabsContent value="applications" className="mt-6">
+                <ApplicationReview projectId={projectId!} />
+              </TabsContent>
+
+              <TabsContent value="payments" className="mt-6">
+                <PaymentManager projectId={projectId!} />
+              </TabsContent>
+            </>
           )}
         </Tabs>
       </main>

@@ -61,18 +61,22 @@ const FreelancerDashboard = ({ userId }: FreelancerDashboardProps) => {
   const handleJoinProject = async (projectId: string) => {
     const { error } = await supabase
       .from("project_members")
-      .insert({ project_id: projectId, user_id: userId });
+      .insert({ 
+        project_id: projectId, 
+        user_id: userId,
+        status: 'pending'
+      });
 
     if (error) {
       toast({
         title: "Error",
-        description: "Failed to join project",
+        description: "Failed to apply to project",
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Success!",
-        description: "You have joined the project",
+        title: "Application Submitted!",
+        description: "You'll be notified when the project owner reviews your application.",
         variant: "default",
       });
       fetchProjects();
@@ -182,7 +186,7 @@ const FreelancerDashboard = ({ userId }: FreelancerDashboardProps) => {
                       className="w-full"
                       variant="gradient"
                     >
-                      Join Project
+                      Apply to Project
                     </Button>
                   </div>
                 </CardContent>
